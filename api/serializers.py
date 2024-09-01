@@ -1,8 +1,12 @@
 from rest_framework import serializers
-from backend.models import Property
+from backend.models import Apartment, House
 
-
-class PropertySerializer(serializers.ModelSerializer):
+class ApartmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Property
+        model = Apartment
+        fields = '__all__'
+
+class HouseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = House
         fields = '__all__'
