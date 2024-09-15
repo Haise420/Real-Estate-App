@@ -4,14 +4,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from django.http import JsonResponse
 from backend.models import *
-from .serializers import ApartmentSerializer, HouseSerializer
+from .serializers import ApartmentSerializer, HouseSerializer, AgencieSerializer, InvestorSerializer, BankSerializer
 
 
 @api_view(['GET'])
 def getProperties(request):
-    apartments = Apartment.objects.all()
-    houses = House.objects.all()
+    apartments = Apartment.objects.all()    
 
+    
     apartment_serializer = ApartmentSerializer(apartments, many=True)
     house_serializer = HouseSerializer(houses, many=True)
 
@@ -19,6 +19,31 @@ def getProperties(request):
 
     return Response(combined_data)
 
+
+@api_view(['GET'])
+def getAgencies(request):
+
+    agencies = Agencie.objects.all()
+    agencies_serializer = AgencieSerializer(agencies, many=True)
+
+    return Response(agencies_serializer.data)
+
+
+@api_view(['GET'])
+def getInvestors(request):
+
+    investors = Investor.objects.all()
+    investors_serializer = InvestorSerializer(investors, many=True)
+
+    return Response(investors_serializer.data)
+
+@api_view(['GET'])
+def getBanks(request):
+
+    banks = Bank.objects.all()
+    banks_serializer = BankSerializer(banks, many=True)
+
+    return Response(banks_serializer.data)
 
 @api_view(['GET'])
 def getProperty(request, property_id):

@@ -1,6 +1,14 @@
 from django.db import models
 from django.core.validators import RegexValidator
 
+KLIJENT = [
+    ('fizicko lice', 'Fizičko lice'),
+    ('agencija', 'Agencija'),
+    ('investitor', 'Investitor'),
+    ('banka', 'Banka'),
+    ('drugo pravno lice', 'Drugo pravno lice'),
+]
+
 TIP_KUCE = [
     ('porodicna kuca', 'Porodična kuća'),
     ('kuce sa vise stanova', 'Kuće sa više stanova'),
@@ -440,12 +448,12 @@ TOPLA_VODA = [
 ]
 
 DODATNA_OPREMLJENOST = [
-    ('garaza', 'Garaza'),
-    ('garazno mesto', 'Garazno Mesto'),
+    ('garaza', 'Garaža'),
+    ('garazno mesto', 'Garažno Mesto'),
     ('spoljno parking mesto', 'Spoljno Parking Mesto'),
     ('javni parking', 'Javni Parking'),
-    ('vesernica', 'Vesernica'),
-    ('igraliste', 'Igraliste'),
+    ('vesernica', 'Vešernica'),
+    ('igraliste', 'Igralište'),
     ('lift', 'Lift'),
     
 ]
@@ -455,8 +463,8 @@ GREJANJE = [
     ('ta pec', 'TA Pec'),
     ('klima uredjaj', 'Klima Uredjaj'),
     ('etazno grejanje na struju', 'Etazno Grejanje Na Struju'),
-    ('etazno grejanje na cvrsto gorivo', 'Etazno Grejanje Na Cvrsto Gorivo'),
-    ('etazno grejanje na gas', 'Etazno Grejanje Na Gas'),
+    ('etazno grejanje na cvrsto gorivo', 'Etažno Grejanje Na Cvrsto Gorivo'),
+    ('etazno grejanje na gas', 'Etažno Grejanje Na Gas'),
     ('podno grejanje', 'Podno Grejanje'),
     
 ]
@@ -487,7 +495,7 @@ STANJE_NEKRETNINE = [
     ('novogradnja', 'Novogradnja'),
     ('u pripremi', 'U Pripremi'),
     ('u izgradnji', 'U Izgradnji'),
-    ('zavrsena izgradnja', 'Zavrsena Izgradnja'),
+    ('zavrsena izgradnja', 'Završena Izgradnja'),
     ('delimicna rekonstrukcija', 'Delimicna Rekonstrukcija'),
 ]
 
@@ -516,6 +524,19 @@ POZICIJA = [
 ]
 
 
+class Client(models.Model):
+    first_name = models.CharField(max_length=20)
+    last_name = models.CharField(max_length=20)
+    cell_phone = models.CharField(max_length=20)
+    email = models.EmailField(max_length=254)
+    post_office_box = models.CharField(max_length=55)
+    address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=32, choices=GRADOVI, blank=True)
+    postal_code = models.CharField(max_length=10, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
+
+    client_type = models.CharField(max_length=32, choices=KLIJENT, blank=True)
+
+
 class PropertyBase(models.Model):
 
     category = models.CharField(max_length=32, choices=KATEGORIJA, blank=True, null=True)
@@ -542,6 +563,7 @@ class PropertyBase(models.Model):
     floor = models.IntegerField()
     furnishing = models.CharField(max_length=50)
     additional_furnishing = models.TextField(blank=True, null=True)
+    total_number_of_rooms = models.IntegerField(blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -563,7 +585,7 @@ class House(PropertyBase):
     terrain = models.CharField(max_length=23, choices=TEREN, blank=True)
     house_category = models.CharField(max_length=23, choices=VRSTA_KUCE, blank=True)
     sewage_system = models.CharField(max_length=32, choices=KANALIZACIJA, blank=True)
-    total_number_of_rooms = models.IntegerField(blank=True, null=True)
+
     yard_area = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     pass
 
