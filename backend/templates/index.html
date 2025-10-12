@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Data</title>
+    
+</head>
+<body>
+    <h1>API Data Testing</h1>
+
+    {% if api_data %}
+    {% for property in api_data %}
+        <div style="border: 1px solid black; margin-bottom: 20px; padding: 10px;width: 50%;">
+            <h2>{{ property.title }}</h2>
+            <p><strong>Category:</strong> {{ property.category }}</p>
+            <p><strong>Subcategory:</strong> {{ property.sub_category }}</p>
+            <p><strong>Price:</strong> {{ property.price }} RSD</p>
+            <p><strong>Description:</strong> {{ property.description }}</p>
+
+            <div style="display: grid;grid-template-columns: 1fr 50%;padding: 20px;">
+                <p><strong>Location:</strong> {{ property.location }}, {{ property.city }}</p>
+                <p><strong>Address:</strong> {{ property.address }}</p>
+                <p><strong>Listing Type:</strong> {{ property.listing_type }}</p>
+                <p><strong>Registered:</strong> {{ property.registered|yesno:"Yes,No" }}</p>
+                <p><strong>Owner:</strong> {{ property.owner|yesno:"Yes,No" }}</p>
+                <p><strong>Area:</strong> {{ property.area }} m²</p>
+                <p><strong>Rooms:</strong> {{ property.rooms }}</p>
+                <p><strong>Heating:</strong> {{ property.heating }}</p>
+                <p><strong>Floor:</strong> {{ property.floor }}</p>
+                <p><strong>Furnishing:</strong> {{ property.furnishing }}</p>
+                <p><strong>Additional Furnishing:</strong> {{ property.additional_furnishing }}</p>
+                <p><strong>Total Number of Rooms:</strong> {{ property.total_number_of_rooms }}</p>
+                <p><strong>Structure:</strong> {{ property.structure }}</p>
+                <p><strong>Located:</strong> {{ property.located }}</p>
+                <p><strong>Property Condition:</strong> {{ property.property_condition }}</p>
+                <p><strong>Apartment Type:</strong> {{ property.aparment_type }}</p>
+                <p><strong>Floor Level:</strong> {{ property.floor_level }}</p>
+                <p><strong>Heating Type:</strong> {{ property.heating_type }}</p>
+                <p><strong>Additional Equipment:</strong> {{ property.additional_equipment }}</p>
+                <p><strong>Hot Water:</strong> {{ property.hot_water }}</p>
+    
+            </div>
+            
+            {% if property.house_type %}
+                <p><strong>House Type:</strong> {{ property.house_type }}</p>
+            {% endif %}
+
+            {% if property.land_area_in_ares %}
+                <p><strong>Land Area (ares):</strong> {{ property.land_area_in_ares }} ares</p>
+            {% endif %}
+
+            {% if property.terrain %}
+                <p><strong>Terrain:</strong> {{ property.terrain }}</p>
+            {% endif %}
+
+            {% if property.house_category %}
+                <p><strong>House Category:</strong> {{ property.house_category }}</p>
+            {% endif %}
+
+            {% if property.sewage_system %}
+                <p><strong>Sewage System:</strong> {{ property.sewage_system }}</p>
+            {% endif %}
+
+            {% if property.yard_area %}
+                <p><strong>Yard Area:</strong> {{ property.yard_area }} m²</p>
+            {% endif %}
+
+            <p><strong>Posted:</strong> {{ property.posted }}</p>
+            <p><strong>Last Updated:</strong> {{ property.last_updated }}</p>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No data available.</p>
+{% endif %}
+</body>
+</html>
