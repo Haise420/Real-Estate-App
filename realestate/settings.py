@@ -22,13 +22,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-)x4os7efm@g^(&6zcs)r0qg_9m&-$e$pt=!b5%wn(=dv7et)e!'
+APPEND_SLASH = False
+
+# CSRF settings
+CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_SECURE = False  # ako nemate HTTPS, ovo mora biti False
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Kada nemate domen, koristite IP adresu i localhost
+ALLOWED_HOSTS = ['217.17.110.54', 'localhost', '127.0.0.1']
 
+# Ako želite da pristupate preko HTTP (bez SSL), ne treba CSRF_TRUSTED_ORIGINS za https
+CSRF_TRUSTED_ORIGINS = ['http://217.17.110.54']
 
+# (Opcionalno) Ako API koristi CORS
+CORS_ALLOWED_ORIGINS = [
+    'http://217.17.110.54',
+]
+
+ASGI_APPLICATION = 'realestate.asgi.application'
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,10 +53,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework_simplejwt',
     'rest_framework',
     'backend',
     "corsheaders",
     'drf_yasg',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'rest_framework.authtoken',
+    'channels',
     
 ]
 
@@ -55,6 +81,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -66,6 +93,49 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 ROOT_URLCONF = 'realestate.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SITE_ID = 1
+
+
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+REST_USE_JWT = True
+LOGOUT_ON_PASSWORD_CHANGE = False
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': 'VAŠ_GOOGLE_CLIENT_ID',
+            'secret': 'VAŠ_GOOGLE_CLIENT_SECRET',
+            'key': ''
+        }
+    },
+    'facebook': {
+        'APP': {
+            'client_id': 'VAŠ_FACEBOOK_APP_ID',
+            'secret': 'VAŠ_FACEBOOK_APP_SECRET',
+            'key': ''
+        }
+    }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 TEMPLATES = [
     {
@@ -121,7 +191,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Belgrade'
 
 USE_I18N = True
 
@@ -132,18 +202,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend', 'build', 'static'),
+    os.path.join(BASE_DIR, 'static')
+
 ]
 
 
-# STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static')
-
-# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

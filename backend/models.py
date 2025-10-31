@@ -1,5 +1,10 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 KLIJENT = [
     ('fizicko lice', 'Fizičko lice'),
@@ -449,40 +454,75 @@ TOPLA_VODA = [
 
 DODATNA_OPREMLJENOST = [
     ('garaza', 'Garaža'),
-    ('garazno mesto', 'Garažno Mesto'),
-    ('spoljno parking mesto', 'Spoljno Parking Mesto'),
-    ('javni parking', 'Javni Parking'),
-    ('vesernica', 'Vešernica'),
-    ('igraliste', 'Igralište'),
     ('lift', 'Lift'),
-    
+    ('vrt', 'Vrt'),
+    ('garazno_mesto', 'Garažno mesto'),
+    ('pristup_bez_barijera', 'Pristup bez barijera'),
+    ('toplotna_izolacija', 'Toplotna izolacija'),
+    ('spoljno_parking_mesto', 'Spoljno parking mesto'),
+    ('terasa', 'Terasa'),
+    ('bazen', 'Bazen'),
+    ('sigurnosni_uredjaji', 'Sigurnosni uređaji'),
+    ('javni_parking', 'Javni parking'),
+    ('balkon', 'Balkon'),
+    ('sauna', 'Sauna'),
+    ('lodja', 'Lođa'),
+    ('obezbedjenje', 'Obezbeđenje'),
+    ('garderoberi', 'Garderoberi'),
+    ('teretana', 'Teretana'),
+    ('staklena_basta', 'Staklena bašta'),
+    ('vesernica', 'Vešernica'),
+    ('recepcija', 'Recepcija'),
+    ('ostava', 'Ostava'),
+    ('kamin', 'Kamin'),
+    ('igraliste', 'Igralište'),
+    ('podrum', 'Podrum'),
 ]
+
 
 GREJANJE = [
     ('centralno grejanje', 'Centralno Grejanje'),
-    ('ta pec', 'TA Pec'),
+    ('ta pec', 'TA Peć'),
     ('klima uredjaj', 'Klima Uredjaj'),
-    ('etazno grejanje na struju', 'Etazno Grejanje Na Struju'),
-    ('etazno grejanje na cvrsto gorivo', 'Etažno Grejanje Na Cvrsto Gorivo'),
+    ('etazno grejanje na struju', 'Etažno Grejanje Na Struju'),
+    ('etazno grejanje na cvrsto gorivo', 'Etažno Grejanje Na Čvrsto Gorivo'),
     ('etazno grejanje na gas', 'Etažno Grejanje Na Gas'),
     ('podno grejanje', 'Podno Grejanje'),
     
+]
+
+TEHNICKA_OPREMLJENOST = [
+    ('telefon', 'Telefon'),
+    ('internet', 'Internet'),
+    ('kablovska_tv', 'Kablovska TV'),
+    ('opticka_mreza', 'Optička mreža'),
+    ('video_nadzor', 'Video Nadzor'),
+    ('interfon', 'Interfon'),
+    ('alarmni_sistem', 'Alarmni Sistem'),
+    ('protivpozarni_sistem', 'Protivpožarni Sistem'),
 ]
 
 SPRATNOST = [
     ('suteren', 'Suteren'),
     ('prizemlje', 'Prizemlje'),
     ('visoko prizemlje', 'Visoko Prizemlje'),
-    ('nije poslednji sprat', 'Nije Poslednji Sprat'),
     ('1', '1'),
     ('2', '2'),
     ('3', '3'),
+    ('4', '4'),
+    ('5', '5'),
+    ('6', '6'),
+    ('7', '7'),
+    ('8', '8'),
+    ('9', '9'),
+    ('10', '10'),
+    ('11', '11'),
 ]
 
 VRSTA_STANA = [
     ('duplex', 'Duplex'),
-    ('stan u kuci', 'Stan U Kuci'),
-    ('dvorisni stan', 'Dvorisni Stan'),
+    ('stan u kuci', 'Stan U Kući'),
+    ('dvorisni stan', 'Dvorišni Stan'),
     ('penthaus', 'Penthaus'),
     ('salonski stan', 'Salonski Stan'),
     ('stan u zgradi', 'Stan U Zgradi'),
@@ -496,7 +536,7 @@ STANJE_NEKRETNINE = [
     ('u pripremi', 'U Pripremi'),
     ('u izgradnji', 'U Izgradnji'),
     ('zavrsena izgradnja', 'Završena Izgradnja'),
-    ('delimicna rekonstrukcija', 'Delimicna Rekonstrukcija'),
+    ('delimicna rekonstrukcija', 'Delimična Rekonstrukcija'),
 ]
 
 STRUKTURA_CHOICES = [
@@ -532,22 +572,66 @@ class Client(models.Model):
     post_office_box = models.CharField(max_length=55)
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=32, choices=GRADOVI, blank=True)
-    postal_code = models.CharField(max_length=10, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
-
+    postal_code = models.CharField(max_length=10, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')], blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='client_profile', null=True, blank=True)
     client_type = models.CharField(max_length=32, choices=KLIJENT, blank=True)
+    
+    image = models.ImageField(upload_to='clients/profiles/', blank=True)
+    
+@receiver(post_save, sender=User)
+def create_user_client(sender, instance, created, **kwargs):
+    if created:
+        Client.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_client(sender, instance, **kwargs):
+    if hasattr(instance, 'client_profile'):
+        instance.client_profile.save()
+        
+        
+
+class Conversation(models.Model):
+    participants = models.ManyToManyField(
+        User,
+        related_name='conversations'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Conversation between {', '.join([u.username for u in self.participants.all()])}"
+
+
+class Message(models.Model):
+    conversation = models.ForeignKey(
+        Conversation,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_messages'
+    )
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Message from {self.sender.username} at {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
 
 
 class PropertyBase(models.Model):
-
-    category = models.CharField(max_length=32, choices=KATEGORIJA, blank=True, null=True)
-    sub_category = models.CharField(max_length=32, choices=POD_KATEGORIJA, blank=True, null=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
+    technical_equipment = models.CharField(max_length=32, choices=TEHNICKA_OPREMLJENOST, blank=True)
+    category = models.CharField(max_length=32, choices=KATEGORIJA, null=True)
+    sub_category = models.CharField(max_length=32, choices=POD_KATEGORIJA, null=True)
 
     title = models.CharField(max_length=255)
     last_updated = models.DateTimeField(auto_now=True)
     posted = models.DateTimeField(auto_now_add=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField()
-    variety = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    variety = models.CharField(max_length=255, blank=True)
     location = models.CharField(max_length=255)
     city = models.CharField(max_length=32, choices=GRADOVI, blank=True)
     address = models.CharField(max_length=255, blank=True)
@@ -559,14 +643,28 @@ class PropertyBase(models.Model):
     owner = models.BooleanField(default=True)
     area = models.DecimalField(max_digits=7, decimal_places=2)
     rooms = models.IntegerField()
-    heating = models.CharField(max_length=50)
+    heating_type = models.CharField(max_length=32, choices=GREJANJE, blank=True)
     floor = models.IntegerField()
     furnishing = models.CharField(max_length=50)
     additional_furnishing = models.TextField(blank=True, null=True)
     total_number_of_rooms = models.IntegerField(blank=True, null=True)
+    
+    is_feautured = models.BooleanField(default=False)
+    
+    images = GenericRelation('PropertyImage', related_query_name='properties')
 
     class Meta:
         abstract = True
+        
+class PropertyImage(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    property = GenericForeignKey('content_type', 'object_id')
+
+    image = models.ImageField(upload_to='properties/%Y/%m/%d/')
+    is_main = models.BooleanField(default=False)
+    is_thumbnail = models.BooleanField(default=False)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
 class Apartment(PropertyBase):
     structure = models.CharField(max_length=23, choices=STRUKTURA_CHOICES, blank=True)
@@ -589,48 +687,47 @@ class House(PropertyBase):
     yard_area = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     pass
 
-
-class Agencie(models.Model):
+class Agency(models.Model):
     title = models.CharField(max_length=255)
-    city = models.CharField(max_length=32, choices=GRADOVI, blank=True)
-    country = models.CharField(max_length=32, choices=DRZAVE, blank=True)
-    postal_code = models.CharField(max_length=10, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
+    city = models.CharField(max_length=32, choices=GRADOVI)
+    country = models.CharField(max_length=32, choices=DRZAVE)
+    postal_code = models.CharField(max_length=10, blank=True, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
     
-    summary = models.CharField(max_length=255)
-    description = models.CharField(max_length=755)
+    summary = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=755, blank=True)
 
     broker_registration_number = models.IntegerField()
     business_phone = models.CharField(max_length=20)
-    cell_phone = models.CharField(max_length=20)
-    website = models.URLField(max_length=200)
-    logo = models.ImageField(upload_to='agencies/logos/')
+    cell_phone = models.CharField(max_length=20, blank=True)
+    website = models.URLField(max_length=200, blank=True)
+    logo = models.ImageField(upload_to='agencies/logos/', blank=True)
 
 
 class Investor(models.Model):
     title = models.CharField(max_length=255)
     city = models.CharField(max_length=32, choices=GRADOVI, blank=True)
-    country = models.CharField(max_length=32, choices=DRZAVE, blank=True)
-    postal_code = models.CharField(max_length=10, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
+    country = models.CharField(max_length=32, choices=DRZAVE)
+    postal_code = models.CharField(max_length=10, blank=True, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
 
-    summary = models.CharField(max_length=255)
-    description = models.CharField(max_length=755)
+    summary = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=755, blank=True)
 
     business_phone = models.CharField(max_length=20)
-    cell_phone = models.CharField(max_length=20)
-    website = models.URLField(max_length=200)
-    logo = models.ImageField(upload_to='investors/logos/')
+    cell_phone = models.CharField(max_length=20, blank=True)
+    website = models.URLField(max_length=200, blank=True)
+    logo = models.ImageField(upload_to='investors/logos/', blank=True)
     
 
 class Bank(models.Model):
     title = models.CharField(max_length=255)
     city = models.CharField(max_length=32, choices=GRADOVI, blank=True)
     country = models.CharField(max_length=32, choices=DRZAVE, blank=True)
-    postal_code = models.CharField(max_length=10, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
+    postal_code = models.CharField(max_length=10, blank=True, validators=[RegexValidator(r'^\d+$', 'Only numeric characters are allowed.')])
 
-    summary = models.CharField(max_length=255)
-    description = models.CharField(max_length=755)
+    summary = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=755, blank=True)
 
-    business_phone = models.CharField(max_length=20)
-    cell_phone = models.CharField(max_length=20)
-    website = models.URLField(max_length=200)
-    logo = models.ImageField(upload_to='banks/logos/')
+    business_phone = models.CharField(max_length=20, blank=True)
+    cell_phone = models.CharField(max_length=20, blank=True)
+    website = models.URLField(max_length=200, blank=True)
+    logo = models.ImageField(upload_to='banks/logos/', blank=True)
